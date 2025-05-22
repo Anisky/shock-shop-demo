@@ -44,15 +44,7 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ env.VERSION }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
     
-    - name: Build and push cart
-      uses: docker/build-push-action@v4
-      with:
-        context: ./src/cart
-        file: ./src/cart/Dockerfile
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-cart:${{ env.VERSION }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-cart:latest
+   
 
     - name: Build and push other services
       run: |
