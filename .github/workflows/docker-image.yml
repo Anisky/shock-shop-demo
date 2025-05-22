@@ -47,7 +47,7 @@ jobs:
     - name: Build and push cart
       uses: docker/build-push-action@v4
       with:
-        context: sock-shop-demo/src/cart
+        context: ./src/cart
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/cart:${{ env.VERSION }}
