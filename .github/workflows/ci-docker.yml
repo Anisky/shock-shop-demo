@@ -1,49 +1,74 @@
 name: Sock Shop CI Pipeline
 
+# Trigger pipeline on push or pull request to main branch
+# Ignore changes to specific paths that have their own CI workflows
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - '**/README.md'
+      - 'kustomize/**'
+      - '.github/workflows/kustomize-build-ci.yaml'
+      - 'terraform/**'
+      - '.github/workflows/terraform-validate-ci.yaml'
+      - 'helm-chart/**'
+      - '.github/workflows/helm-chart-ci.yaml'
+  
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - '**/README.md'
+      - 'kustomize/**'
+      - '.github/workflows/kustomize-build-ci.yaml'
+      - 'terraform/**'
+      - '.github/workflows/terraform-validate-ci.yaml'
+      - 'helm-chart/**'
+      - '.github/workflows/helm-chart-ci.yaml'
 
+# Environment variables for Docker image configuration
 env:
-  REGISTRY: docker.io  # Change to your registry (quay.io, harbor.yourdomain.com, etc.)
-  IMAGE_NAME: anisky/shock-shop  # Uses your GitHub repo name or set a custom name
-  VERSION: ${{ github.sha }} 
+  REGISTRY: docker.io  # Container registry (could be quay.io, harbor.yourdomain.com, etc.)
+  IMAGE_NAME: anisky/shock-shop  # Base name for all images
+  VERSION: ${{ github.sha }}  # Use git SHA as version for traceability
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
+    # Checkout the repository code
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for complete git metadata
       
+    # Set up Docker Buildx for multi-platform builds (though we're not using it here)
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
+      with:
+        driver: docker-container  # Use container driver for better performance
 
+    # Authenticate with the container registry
     - name: Login to Container Registry
       uses: docker/login-action@v2
       with:
         registry: ${{ env.REGISTRY }}
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      # Mask the output to prevent potential secret leakage
+      env:
+        DOCKER_CLI_EXPERIMENTAL: enabled
         
-    - name: Print working directory
+    # Debug step to show directory structure (helpful for troubleshooting)
+    - name: Inspect working directory
       run: |
-        echo "Current working directory: $(pwd)"
-        echo "Directory contents:"
+        echo "### Current working directory structure ###"
+        echo "Root directory:"
         ls -al
+        echo -e "\nSource directory:"
+        ls -al src/
+        echo -e "\nBuild context prepared for Docker builds"
     
-    - name: Build and push front-end
-      uses: docker/build-push-action@v4
-      with:
-        context: ./src/frontend
-        file: ./src/frontend/Dockerfile
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ env.VERSION }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
-    
+    # Special build for cartservice which has a different Dockerfile location
     - name: Build and push cartservice
       uses: docker/build-push-action@v4
       with:
@@ -53,11 +78,49 @@ jobs:
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-cartservice:${{ env.VERSION }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-cartservice:latest
-    
+      env:
+        BUILDKIT_PROGRESS: plain  # Show detailed build output
 
-    - name: Build and push other services
+    # Build and push all other services using a loop
+    - name: Build and push remaining services
       run: |
-        for service in adservice checkoutservice currencyservice emailservice loadgenerator paymentservice productcatalogservice recommendationservice shippingservice shoppingassistantservice ; do
-          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }} src/$service
+        echo "### Starting batch build of all services ###"
+        echo "Using registry: ${{ env.REGISTRY }}"
+        echo "Image prefix: ${{ env.IMAGE_NAME }}"
+        echo "Version tag: ${{ env.VERSION }}"
+        
+        # List of services to build (excluding cartservice which was built separately)
+        services=(
+          adservice 
+          checkoutservice 
+          currencyservice 
+          emailservice 
+          loadgenerator 
+          paymentservice 
+          productcatalogservice 
+          recommendationservice 
+          shippingservice 
+          shoppingassistantservice
+        )
+        
+        for service in "${services[@]}"; do
+          echo -e "\n=== Building $service ==="
+          echo "Building image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }}"
+          
+          # Build the Docker image
+          docker build \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:latest \
+            ./src/$service
+          
+          echo "=== Pushing $service ==="
+          # Push both version-tagged and latest images
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:latest
+          
+          echo "=== $service completed ==="
         done
+        
+        echo -e "\n### All services built and pushed successfully ###"
+      env:
+        DOCKER_CLI_EXPERIMENTAL: enabled
