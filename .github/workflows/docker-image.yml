@@ -38,7 +38,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        file: ./src/frontend
+        file: ./src/frontend/Dockerfile
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/front-end:${{ env.VERSION }}
