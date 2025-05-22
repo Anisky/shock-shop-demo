@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: docker.io  # Change to your registry (quay.io, harbor.yourdomain.com, etc.)
-  IMAGE_NAME: ${{ github.repository }}  # Uses your GitHub repo name or set a custom name
+  IMAGE_NAME: anisky/shock-shop  # Uses your GitHub repo name or set a custom name
   VERSION: ${{ github.sha }} 
 
 jobs:
