@@ -48,8 +48,7 @@ jobs:
 
     - name: Build and push other services
       run: |
-        cd sock-shop-demo
-        for service in catalogue currency payment shipping user queue-master; do
+        for service in catalogue catservice currency payment shipping user queue-master; do
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }} src/$service
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }}
         done
