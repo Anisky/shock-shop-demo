@@ -37,7 +37,7 @@ jobs:
     - name: Build and push front-end
       uses: docker/build-push-action@v4
       with:
-        context: src/front-end/
+        context: ./src/front-end/
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/front-end:${{ env.VERSION }}
