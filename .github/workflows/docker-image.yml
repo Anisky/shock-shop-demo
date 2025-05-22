@@ -44,11 +44,20 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ env.VERSION }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
     
-   
+    - name: Build and push cartservice
+      uses: docker/build-push-action@v4
+      with:
+        context: ./src/cartservice/src
+        file: ./src/cartsrevice/src/Dockerfile
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-cartservice:${{ env.VERSION }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-cartservice:latest
+    
 
     - name: Build and push other services
       run: |
-        for service in catalogue catservice currency payment shipping user queue-master; do
+        for service in adservice checkoutservice currencyservice emailservice loadgenerator paymentservice productcatalogservice recommendationservice shoppingservice shoppingassistantservice ; do
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }} src/$service
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }}
         done
