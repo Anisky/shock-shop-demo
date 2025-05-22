@@ -48,7 +48,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: ./src/cartservice/src
-        file: ./src/cartsrevice/src/Dockerfile
+        file: ./src/cartservice/src/Dockerfile
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-cartservice:${{ env.VERSION }}
