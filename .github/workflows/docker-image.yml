@@ -21,7 +21,7 @@ jobs:
     - name: Clone Sock Shop repository (if not already present)
       run: |
         if [ ! -d "sock-shop" ]; then
-          git clone https://github.com/Anisky/shock-shop-demo/.git sock-shop
+          git clone https://github.com/Anisky/shock-shop-demo.git sock-shop
         fi
         cd sock-shop
 
