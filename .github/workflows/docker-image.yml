@@ -57,7 +57,7 @@ jobs:
 
     - name: Build and push other services
       run: |
-        for service in adservice checkoutservice currencyservice emailservice loadgenerator paymentservice productcatalogservice recommendationservice shoppingservice shoppingassistantservice ; do
+        for service in adservice checkoutservice currencyservice emailservice loadgenerator paymentservice productcatalogservice recommendationservice shippingservice shoppingassistantservice ; do
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }} src/$service
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-$service:${{ env.VERSION }}
         done
