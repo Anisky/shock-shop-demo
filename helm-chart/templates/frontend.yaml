@@ -281,5 +281,21 @@ spec:
         host: {{ .Values.frontend.name }}
         port:
           number: 80
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: allow-anyuid-{{ .Release.Namespace }}-{{ .Values.frontend.name }}
+  namespace: {{ .Release.Namespace }}  # Uses the Helm release namespace
+  labels:
+    app: {{ .Values.frontend.name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.frontend.name }}
+    namespace: {{ .Release.Namespace }}  # SA is in the same namespace
+roleRef:
+  kind: ClusterRole
+  name: system:openshift:scc:anyuid
+  apiGroup: rbac.authorization.k8s.io
 {{- end }}
 {{- end }}
